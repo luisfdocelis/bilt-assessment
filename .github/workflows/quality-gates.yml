@@ -26,6 +26,12 @@ jobs:
         with:
           node-version: "20"
 
+      - name: Ensure Maven is installed
+        run: |
+          if ! command -v mvn &> /dev/null; then
+            apt-get update && apt-get install -y maven
+          fi
+
       - name: Run Backend Tests with JaCoCo Quality Gate
         run: mvn --batch-mode clean test
 
@@ -37,7 +43,7 @@ jobs:
         with:
           name: jacoco-coverage-report
           path: target/site/jacoco/
-        if: always()
+        if: ${{ !env.ACT && always() }}
 
   static-analysis-and-sast:
     name: "QG: SAST & Security Linting"
