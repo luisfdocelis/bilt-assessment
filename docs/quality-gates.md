@@ -61,14 +61,29 @@ act -j code-quality-and-coverage -W .github/workflows/quality-gates.yml
 act -j static-analysis-and-sast -W .github/workflows/quality-gates.yml
 ```
 
+### Run the GitHub CodeQL SAST analysis job:
+```bash
+act -j security-codeql-sast -W .github/workflows/quality-gates.yml
+```
+
 ---
 
-## 4. Integration with SonarQube & Checkmarx (Enterprise Architecture)
+## 4. GitHub CodeQL SAST Integration
+
+GitHub CodeQL is configured as a dedicated job (`security-codeql-sast`) running on both Java and JavaScript matrices with `security-extended` query suites:
+- **Languages scanned:** `java-kotlin`, `javascript-typescript`.
+- **Query suite:** `security-extended` (includes OWASP Top 10, CWE vulnerabilities, memory leaks, and concurrency race hazards).
+- **Automation:** Integrated into pull requests and pushes across all branches.
+
+---
+
+## 5. Enterprise Alignment: SonarQube & Checkmarx
 
 In an enterprise environment:
 1. **SonarQube / SonarCloud:**
    - Evaluates code smells, technical debt ratio (< 5%), and new code coverage (> 80%).
    - Consumes the JaCoCo XML report generated at `target/site/jacoco/jacoco.xml`.
-2. **Checkmarx SAST:**
+2. **Checkmarx SAST & GitHub CodeQL:**
    - Scans against OWASP Top 10 vulnerabilities, CWE injection vectors, and data sanitization paths.
    - Enforces a zero High/Critical vulnerability gate prior to branch merge.
+

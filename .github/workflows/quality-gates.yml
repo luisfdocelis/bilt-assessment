@@ -60,3 +60,43 @@ jobs:
               assert 'Thread.sleep' not in content or 'test' in f, f'Prohibited sleep in {f}'
           print('SAST Static Check: Clean codebase!')
           "
+
+  security-codeql-sast:
+    name: "QG: GitHub CodeQL SAST Security Analysis"
+    runs-on: ubuntu-latest
+    permissions:
+      actions: read
+      contents: read
+      security-events: write
+    strategy:
+      fail-fast: false
+      matrix:
+        language: [ "java-kotlin", "javascript-typescript" ]
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Initialize CodeQL
+        uses: github/codeql-action/init@v3
+        with:
+          languages: ${{ matrix.language }}
+          queries: security-extended
+
+      - name: Set up Java 17 (for Java analysis)
+        if: matrix.language == 'java-kotlin'
+        uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: "17"
+          cache: maven
+
+      - name: Autobuild / Manual Build
+        if: matrix.language == 'java-kotlin'
+        run: mvn --batch-mode compile -DskipTests
+
+      - name: Perform CodeQL Analysis
+        uses: github/codeql-action/analyze@v3
+        with:
+          category: "/language:${{ matrix.language }}"
+
+
