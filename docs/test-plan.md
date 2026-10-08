@@ -54,16 +54,42 @@ The verification strategy encompasses three levels:
 
 ---
 
-## 4. Test Execution Results
+## 4. Test Execution Results & Coverage Enhancement Metrics
 
-* **Backend (`mvn test`):**
-  * Total tests: **30**
-  * Failures: **0**
-  * Errors: **0**
-  * Skipped: **0**
-  * Result: **BUILD SUCCESS**
-* **Frontend (`npm run test:web`):**
-  * Total tests: **4**
-  * Passing: **4**
-  * Failing: **0**
-  * Result: **ALL PASSED**
+### A. Coverage Metrics Summary (Baseline vs. Enhanced)
+
+| Test Suite / Layer | Baseline Tests | Enhanced Tests | Increase (Delta) | Coverage Focus |
+| :--- | :---: | :---: | :---: | :--- |
+| **Backend: Deduplication Service (`ProcessedEventStore`)** | 0 unit tests | **5 unit tests** | **+5 (+100%)** | Atomic insertion, out-of-order retention, and 32-thread concurrency stress |
+| **Backend: Business Logic (`PointsCalculator`)** | 0 unit tests | **6 unit tests** | **+6 (+100%)** | Unlinked/linked multipliers, streak bonus thresholds (<6, =6, >6 months), rounding |
+| **Backend: Domain Models (`model.*`)** | 0 unit tests | **4 unit tests** | **+4 (+100%)** | Precondition null checks, immutability, thread-safe monthly accrual, enum completeness |
+| **Backend: Engine Integration (`RewardsEngineTest`)** | 8 tests (15 runs) | **8 tests (15 runs)** | Preserved | Out-of-order & 16-worker concurrent redelivery (RepeatedTest x8) |
+| **Backend Total** | **15 test runs** | **30 test runs** | **+15 (+100%)** | Complete end-to-end and unit layer isolation |
+| **Frontend: View Model (`dashboard.test.js`)** | 3 tests | **4 tests** | **+1 (+33%)** | Edge cases: progress bar capping at 100% when balance exceeds monthly cap |
+| **Grand Total** | **18 tests** | **34 test runs** | **+16 (+89%)** | **100% Passing (0 failures, 0 errors, 0 skipped)** |
+
+---
+
+### B. Detailed Breakdown of New Test Classes Added
+
+1. **`ProcessedEventStoreTest.java` (New File):**
+   - Directly tests the deduplication store independently of the full orchestration engine.
+   - Tests out-of-order storage to ensure past event IDs are never discarded by newer events.
+   - Validates the atomic `tryRecord()` contract: returns `true` on first arrival, `false` on duplicate arrival.
+   - Includes a high-concurrency multi-threaded stress test with **32 parallel worker threads** synchronizing on a `CountDownLatch` to guarantee zero race conditions on simultaneous arrivals.
+
+2. **`PointsCalculatorTest.java` (New File):**
+   - Validates calculation logic in complete isolation from the engine.
+   - Verifies base rates for linked ($2\times$) vs. unlinked ($1\times$) accounts.
+   - Verifies boundary conditions for streak bonuses: below 6 months (0%), exactly 6 months (+10%), and above 6 months (+10%).
+   - Asserts strict rounding down (`RoundingMode.DOWN`) for fractional bonuses.
+
+3. **`ModelCoverageTest.java` (New File):**
+   - Asserts constructor preconditions and `NullPointerException` safety for `PaymentEvent` and `PointsResult`.
+   - Validates that `MemberAccount` properly and thread-safely merges points across multiple events in the same `YearMonth`.
+   - Validates helper methods (`isSkippedAsDuplicate()`, `toString()`) and enum values in `ProcessingOutcome`.
+
+4. **`web/dashboard.test.js` (Enhanced):**
+   - Added boundary test verifying `progressPercent` is strictly capped at `100` even when a member's points exceed the monthly cap (`pointsThisMonth > monthlyCap`).
+
+
