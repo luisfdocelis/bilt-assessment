@@ -93,3 +93,4 @@ The rewards dashboard always announces that points were successfully credited, e
    * **`AWARDED`:** Title `"${pointsAwarded} points credited"`, tone `success`.
    * **`DUPLICATE`:** Title `"Duplicate event skipped"`, tone `neutral`.
    * **`CAPPED`:** Title `"Monthly cap reached"`, tone `warning`.
+

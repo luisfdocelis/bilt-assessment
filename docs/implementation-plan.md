@@ -135,3 +135,4 @@ export function buildViewModel(result, member) {
 1. `mvn test`: 100% tests pass including concurrent worker stress tests.
 2. `npm run test:web`: 100% tests pass.
 3. No regressions on base points, streak bonuses, or monthly capping rules.
+

@@ -67,3 +67,4 @@ Evaluate `result.outcome` in `buildViewModel`:
 2. **Frontend Tests:**
    * Execute `npm run test:web`.
    * Validate all three outcome representations (`AWARDED`, `DUPLICATE`, and `CAPPED`).
+
